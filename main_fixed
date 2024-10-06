@@ -56,7 +56,67 @@ with open('PS_2024.10.04_01.33.00.csv', newline='', encoding='utf-8') as csvfile
     for data in extracted_data:
         print(f"Planet Name: {data[0]}, Brightness: {data[1]}, RA: {data[2]}, Declination: {data[3]}")
 
+######更正
+import csv
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from datetime import datetime
+import pandas as pd
+import coord_trans as ct
 
+DEG_TO_RAD = np.pi / 180
+
+
+data = pd.read_csv('filtered_data.csv')
+pl_name_list = data['sy_dist'].tolist()
+brightness_index_list = data['sy_gaiamag'].tolist()
+ra_index_list = data['ra'].tolist()
+dec_index_list = data['dec'].tolist()
+sy_dist_list = data['sy_dist'].tolist()
+
+try:
+    r, theta, phi = map(float, input("Enter the Astronomical coordinate (r theta phi): ").split())
+except ValueError:
+    print("Please enter exactly three values for r, theta, and phi.")
+    exit(1)  # 退出程式
+
+[search_star_dist, search_star_name] = ct.search_stars(r, theta, phi, sy_dist_list,
+                                                     dec_index_list, ra_index_list, pl_name_list)
+
+# list the stars nearby
+
+# select the star
+
+# input the stars name and search the distance
+selected_star_name = input("Enter the name of the star you want to select: ")
+
+# 查找對應的 sy_dist 和其他值
+if selected_star_name in pl_name_list:
+    star_index = pl_name_list.index(selected_star_name)  # 找到星星的索引
+    corresponding_sy_dist = sy_dist_list[star_index]
+    corresponding_brightness = brightness_index_list[star_index]
+    corresponding_ra = ra_index_list[star_index]
+    corresponding_dec = dec_index_list[star_index]
+    
+    x, y, z = ct.spherical_to_cartesian(corresponding_sy_dist, corresponding_dec, corresponding_ra)
+    
+    # 轉換所有星星的座標
+    x_list, y_list, z_list = ct.coord_trans(ct.spherical_to_cartesian(sy_dist_list, dec_index_list, ra_index_list) - (x, y, z))
+
+    # 繪製 3D 圖形
+    fig = plt.figure()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(x_list, y_list, z_list, s=1)  # 繪製所有星星
+
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    plt.title('3D Star Plot')
+    plt.show()
+else:
+    print("Star not found in the list.")
+######
 
 
 # 將赤經、赤緯和距離轉換為星座標
